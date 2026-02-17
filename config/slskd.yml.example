@@ -1,0 +1,83 @@
+# slskd Configuration Example
+# Location: /home/slskd/.local/share/slskd/slskd.yml
+#
+# This is a minimal example configuration for slskd.
+# For full configuration options, see: https://github.com/slskd/slskd
+
+# Soulseek connection settings
+soulseek:
+  # DO NOT manually set this value - it will be managed by pia-port-updater.sh
+  # The port forwarding script updates this automatically
+  listen_port: 12345
+  
+  # Your Soulseek username
+  username: your_soulseek_username
+  
+  # Your Soulseek password
+  password: your_soulseek_password
+  
+  # Description shown to other users
+  description: "Sharing via slskd"
+  
+  # Download speed limit (bytes/sec, 0 = unlimited)
+  download_speed_limit: 0
+  
+  # Upload speed limit (bytes/sec, 0 = unlimited)  
+  upload_speed_limit: 0
+
+# Web interface settings
+web:
+  # Port for the web UI (access via http://your-server-ip:5030)
+  port: 5030
+  
+  # Web UI authentication
+  authentication:
+    username: admin
+    password: your_secure_password_here
+    
+  # Enable HTTPS (optional)
+  https:
+    enabled: false
+    # certificate: /path/to/cert.pem
+    # key: /path/to/key.pem
+
+# File sharing settings
+shares:
+  # Directories to share with other users
+  directories:
+    - /home/slskd/music
+    
+  # File filters (optional)
+  # filters:
+  #   - "*.flac"
+  #   - "*.mp3"
+
+# Download settings
+directories:
+  # Where to save downloads
+  downloads: /home/slskd/downloads
+  
+  # Incomplete downloads directory
+  incomplete: /home/slskd/downloads/incomplete
+
+# Global settings
+global:
+  # Upload slots (concurrent uploads)
+  upload:
+    slots: 5
+    
+  # Download slots (concurrent downloads)
+  download:
+    slots: 5
+
+# Logging
+logger:
+  level: Information
+  # Options: Trace, Debug, Information, Warning, Error, Critical
+  
+  # Log to file
+  file:
+    enabled: true
+    path: /home/slskd/.local/share/slskd/logs
+    rolling_interval: Day
+    retain_days: 7

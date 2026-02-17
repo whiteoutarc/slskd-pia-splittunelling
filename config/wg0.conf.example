@@ -1,0 +1,72 @@
+# WireGuard Configuration for PIA with Split-Tunnel Routing
+# Location: /etc/wireguard/wg0.conf
+#
+# This configuration sets up split-tunnel routing so that ONLY the slskd user's
+# traffic routes through the VPN, while all other traffic (including SSH) uses
+# the default route.
+#
+# BEFORE USING:
+# 1. Run pia-wireguard-bootstrap.sh to get your specific values
+# 2. Replace ALL placeholders below with your actual values
+# 3. Ensure slskd user exists: useradd -r -m -d /home/slskd -s /usr/sbin/nologin slskd
+
+[Interface]
+# Replace with your WireGuard private key from bootstrap script
+PrivateKey = <PRIVKEY>
+
+# Replace with your assigned peer IP from bootstrap script (e.g., 10.x.x.x/32)
+Address = <PEER_IP>
+
+# Replace with DNS servers from bootstrap script (e.g., 10.0.0.243)
+DNS = <DNS>
+
+# MTU optimized for 1Gbps upload
+MTU = 1380
+
+# PostUp: Rules executed when the VPN tunnel comes up
+# These rules implement split-tunnel routing and kill switch
+
+PostUp = ip rule add uidrange $(id -u slskd)-$(id -u slskd) table 42 priority 100
+# ↑ Route only slskd user's traffic to table 42
+
+PostUp = ip route add default dev %i table 42
+# ↑ Table 42 default route goes through wg0
+
+PostUp = ip route add $(wg show %i endpoints | awk '{print $2}' | sed 's/:.*//')/32 via $(ip route show default | awk '/default/ {print $3}') dev $(ip route show default | awk '/default/ {print $5}')
+# ↑ Route WireGuard endpoint through physical NIC (prevents routing loop)
+
+PostUp = iptables -t nat -A POSTROUTING -o %i -m owner --uid-owner slskd -j MASQUERADE
+# ↑ NAT slskd traffic through VPN
+
+PostUp = iptables -A OUTPUT ! -o lo -m owner --uid-owner slskd -d 192.168.0.0/16 -j ACCEPT; iptables -A OUTPUT ! -o lo -m owner --uid-owner slskd -d 172.16.0.0/12 -j ACCEPT; iptables -A OUTPUT ! -o lo -m owner --uid-owner slskd -d 10.0.0.0/8 -j ACCEPT; iptables -A OUTPUT ! -o lo -m owner --uid-owner slskd ! -o %i -j REJECT
+# ↑ Kill switch: block slskd from physical NIC (except loopback and LAN)
+
+PostUp = sysctl -w net.core.rmem_max=26214400; sysctl -w net.core.wmem_max=26214400
+# ↑ Increase socket buffers for 1Gbps performance
+
+# PostDown: Cleanup rules when VPN tunnel goes down
+
+PostDown = ip rule del uidrange $(id -u slskd)-$(id -u slskd) table 42 priority 100 || true
+
+PostDown = ip route del default dev %i table 42 || true
+
+PostDown = ip route del $(wg show %i endpoints | awk '{print $2}' | sed 's/:.*//')/32 via $(ip route show default | awk '/default/ {print $3}') dev $(ip route show default | awk '/default/ {print $5}') || true
+
+PostDown = iptables -t nat -D POSTROUTING -o %i -m owner --uid-owner slskd -j MASQUERADE || true
+
+PostDown = iptables -D OUTPUT ! -o lo -m owner --uid-owner slskd -d 192.168.0.0/16 -j ACCEPT || true; iptables -D OUTPUT ! -o lo -m owner --uid-owner slskd -d 172.16.0.0/12 -j ACCEPT || true; iptables -D OUTPUT ! -o lo -m owner --uid-owner slskd -d 10.0.0.0/8 -j ACCEPT || true; iptables -D OUTPUT ! -o lo -m owner --uid-owner slskd ! -o %i -j REJECT || true
+
+PostDown = sysctl -w net.core.rmem_max=212992; sysctl -w net.core.wmem_max=212992 || true
+
+[Peer]
+# Replace with PIA server's public key from bootstrap script
+PublicKey = <SERVER_PUBKEY>
+
+# Replace with PIA server endpoint IP:PORT from bootstrap script (e.g., 1.2.3.4:1337)
+Endpoint = <ENDPOINT_IP:PORT>
+
+# Route all traffic through VPN for slskd user
+AllowedIPs = 0.0.0.0/0
+
+# Keep connection alive (required for NAT traversal and port forwarding)
+PersistentKeepalive = 25
