@@ -1,0 +1,66 @@
+[Unit]
+Description=slskd - Soulseek daemon
+Documentation=https://github.com/slskd/slskd
+After=network-online.target wg-quick@wg0.service
+Wants=network-online.target
+Requires=wg-quick@wg0.service
+
+[Service]
+Type=simple
+User=slskd
+Group=slskd
+
+# Working directory
+WorkingDirectory=/home/slskd/slskd-bin
+
+# Environment variables
+Environment=SLSKD_APP_DIR=/home/slskd/.local/share/slskd
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+Environment=DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+
+# Start slskd
+ExecStart=/home/slskd/slskd-bin/slskd \
+    --app-dir /home/slskd/.local/share/slskd \
+    --config /home/slskd/.local/share/slskd/slskd.yml
+
+# Restart behavior
+Restart=on-failure
+RestartSec=10
+StartLimitBurst=3
+StartLimitInterval=300
+
+# Resource limits
+LimitNOFILE=1048576
+LimitNPROC=512
+
+# Security hardening
+# Filesystem protection
+ProtectSystem=strict
+ReadWritePaths=/home/slskd
+ReadOnlyPaths=/home/ubuntu/music
+PrivateTmp=true
+
+# Privilege restrictions
+NoNewPrivileges=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+
+# System call filtering
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
+
+# Network restrictions (allow network access for slskd)
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Capability restrictions (slskd doesn't need any capabilities)
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

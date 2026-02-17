@@ -1,0 +1,23 @@
+[Unit]
+Description=PIA Port Forwarding Updater Timer
+Documentation=https://github.com/whiteoutarc/slskd-pia-splittunelling
+Requires=pia-port-updater.service
+
+[Timer]
+# Run 30 seconds after boot
+OnActiveSec=30s
+
+# Run every 14 minutes after the last activation
+OnUnitActiveSec=14min
+
+# Add random delay to prevent thundering herd
+RandomizedDelaySec=30s
+
+# Timer accuracy (how precise the timing should be)
+AccuracySec=1s
+
+# Persist timer state across reboots
+Persistent=true
+
+[Install]
+WantedBy=timers.target

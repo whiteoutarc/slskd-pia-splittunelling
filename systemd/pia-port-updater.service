@@ -1,0 +1,42 @@
+[Unit]
+Description=PIA Port Forwarding Updater
+Documentation=https://github.com/whiteoutarc/slskd-pia-splittunelling
+After=network-online.target wg-quick@wg0.service
+Wants=network-online.target
+Requires=wg-quick@wg0.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+
+# Load PIA credentials from environment file
+EnvironmentFile=/etc/pia-wg.env
+
+# Execute the port updater script
+ExecStart=/usr/local/bin/pia-port-updater.sh
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pia-port-updater
+
+# Security hardening
+ProtectSystem=strict
+ReadWritePaths=/home/slskd
+PrivateTmp=true
+NoNewPrivileges=false
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+
+# Network access required
+RestrictAddressFamilies=AF_INET AF_INET6
+
+# Timeout (script should complete quickly)
+TimeoutSec=120
+
+[Install]
+WantedBy=multi-user.target
