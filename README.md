@@ -14,16 +14,16 @@ This setup creates a secure, high-performance file-sharing system where:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                          Ubuntu Server                           │
-│                                                                   │
+│                                                                  │
 │  ┌──────────────┐                        ┌──────────────┐        │
-│  │ ubuntu user  │────────────────────────▶│     eth0     │────────┼──▶ Direct Internet
+│  │ ubuntu user  │────────────────────────▶│     eth0     │──────┼──▶ Direct Internet
 │  │ (SSH, etc.)  │                        │  (Physical)  │        │
 │  └──────────────┘                        └──────────────┘        │
-│                                                  ▲                │
-│  ┌──────────────┐       ┌──────────────┐        │                │
-│  │ slskd user   │──────▶│     wg0      │────────┘                │
+│                                                  ▲               │
+│  ┌──────────────┐       ┌──────────────┐         │               │
+│  │ slskd user   │─────▶│      wg0     │─────────┘               │
 │  │ (Soulseek)   │       │  (VPN Tunnel)│                         │
 │  └──────────────┘       └──────┬───────┘                         │
 │         ▲                      │                                 │
@@ -35,7 +35,7 @@ This setup creates a secure, high-performance file-sharing system where:
 │  └───────────────────┘  2. Request/renew forwarded port          │
 │                         3. Update slskd.yml                      │
 │                         4. Restart slskd if port changed         │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Time Estimate
